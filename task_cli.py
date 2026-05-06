@@ -81,19 +81,41 @@ if __name__=='__main__':
             print(f'ERROR: {e}')
 
     parser=argparse.ArgumentParser()
+    subparser= parser.add_subparsers(dest='command')
 
-    parser.add_argument('-add',type=str,help='enter your task here')
-    parser.add_argument('-update',metavar='<id task>',nargs=2,help='enter the id and the new task to update')
-    parser.add_argument('-delete',type=str,metavar='<id>',help="enter the id to delete a specefic task")
+    add_parser=subparser.add_parser('add',help='enter your task here')
+    add_parser.add_argument('description',type=str)
+    #parser.add_argument('-add',type=str,help='enter your task here')
 
+    update_parser=subparser.add_parser('update')
+    update_parser.add_argument('id',type=str)
+    update_parser.add_argument('description',type=str)
+    #parser.add_argument('-update',metavar='<id task>',nargs=2,help='enter the id and the new task to update')
 
+    delete_parser= subparser.add_parser('delete')
+    delete_parser.add_argument('id',type=str)
+    #parser.add_argument('-delete',type=str,metavar='<id>',help="enter the id to delete a specefic task")
 
+    """
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-mark-in-progress','--mark_in_progress',type=str,metavar='<id>',help="enter the task's id to mark it in progress")
     group.add_argument('-mark-done','--mark_done',type=str,metavar='<id>',help="enter the task's id to mark it done")
     group.add_argument('-mark-todo','--mark_todo',type=str,metavar='<id>',help="enter the task's id to mark it todo")
+    """
 
-    parser.add_argument('-list',choices=['all','todo','in-progress','done'],nargs='?',const='all')
+    mark_in_progress_parser = subparser.add_parser('mark-in-progress')
+    mark_in_progress_parser.add_argument('id',type=str)
+
+    mark_done_parser = subparser.add_parser('mark-done')
+    mark_done_parser.add_argument('id',type=str)
+
+    mark_todo_parser = subparser.add_parser('mark-todo')
+    mark_todo_parser.add_argument('id',type=str)
+
+
+    list_parser=subparser.add_parser('list')
+    list_parser.add_argument('status',choices=['all','todo','in-progress','done'],nargs='?',default='all')
+    #parser.add_argument('-list',choices=['all','todo','in-progress','done'],nargs='?',const='all')
 
 
     arg=parser.parse_args()
@@ -103,18 +125,18 @@ if __name__=='__main__':
     #print(arg)
 
 
-    if arg.add:
+    if arg.command=='add':
         createdAt=get_time()
         numeric_id=[int(k) for k in data if k.isdigit()]
         id= max(numeric_id)+1 if numeric_id else 1
-        data[str(id)]=dict(description=arg.add,status='todo',createdAt=str(createdAt),updatedAt=str(createdAt))
+        data[str(id)]=dict(description=arg.description,status='todo',createdAt=str(createdAt),updatedAt=str(createdAt))
         if to_data_base(id,data,DB_PATH):
             print(f'Task added successfully ID({id})')
 
-    if arg.update:
+    if arg.command=="update":
         updatedAt=get_time()
-        id=arg.update[0]
-        newTask=arg.update[1]
+        id=arg.id
+        newTask=arg.description
         if id in data:
             data[id]["description"]=newTask
             data[id]["updatedAt"]=str(updatedAt)
@@ -122,8 +144,9 @@ if __name__=='__main__':
                 print(f'Task updated successfully ID({id})')
         else:
             print(f"Sorry ID({id}) isn't in your dataBase ")
-    if arg.delete:
-        id=arg.delete
+    
+    if arg.command=='delete':
+        id=arg.id
         if id in data:
             del data[id]
             if to_data_base(id,data,DB_PATH):
@@ -131,25 +154,28 @@ if __name__=='__main__':
         else:
             print(f"Sorry ID({id}) isn't in your dataBase ")
     
-    if arg.mark_in_progress:
-        id=arg.mark_in_progress
+    if arg.command=='mark-in-progress':
+        id=arg.id
         if mark_task(id,'in-progress',data):
             print(f'Task with ID({id}) set to (in-progress)')
-    if arg.mark_done:
-        id=arg.mark_done
+    if arg.command=='mark-done':
+        id=arg.id
         if mark_task(id,'done',data):
             print(f'Task with ID({id}) set to (done)')
-    if arg.mark_todo:
-        id=arg.mark_todo
+    if arg.command=='mark-todo':
+        id=arg.id
         if mark_task(id,'todo',data):
             print(f'Task with ID({id}) set to (todo)')
-    if arg.list:
+
+    if arg.command=='list':
         print_header(['task id','description','status','created at',"updated at"])
         tasks=list(data.items())
 
-        if arg.list=='all':
+        if arg.status=='all':
             display_all_tasks(tasks)
-            #print(arg.list)
+            
         else:
-            display_specific_tasks(tasks,arg.list)
+            display_specific_tasks(tasks,arg.status)
+    if arg.command==None:
+        parser.print_help()
         
