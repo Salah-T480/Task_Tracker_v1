@@ -5,12 +5,15 @@ It lets you track what you need to do, what you have done, and what you are curr
 All tasks are stored locally in a JSON file that is auto-created on first run.
 
 ---
+
 ## Project
 
 This project is part of the [roadmap.sh](https://roadmap.sh) curriculum.
 
 - **Project Page**: https://roadmap.sh/projects/task-tracker
 - **My Solution**: https://github.com/Salah-T480/Task_Tracker_v1
+
+---
 
 ## Requirements
 
